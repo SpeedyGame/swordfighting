@@ -50,7 +50,7 @@ var lowerArmHeight = 2.0;
 var upperArmWidth  = 0.5;
 var lowerArmWidth  = 0.5;
 
-var swordGripHeight = 0.5;
+var swordGripHeight = 1;
 var swordGuardHeight = 0.1;
 var swordBladeHeight = 6.0;
 var swordGripWidth = 0.5;
