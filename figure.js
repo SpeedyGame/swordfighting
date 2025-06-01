@@ -365,7 +365,7 @@ function torso() {
 
 function head() {
 
-    instanceMatrix = mult(modelViewMatrix, translate(0.0, 0.5 * headHeight, 0.0 ));
+    instanceMatrix = mult(modelViewMatrix, translate(0.0, 1 * headHeight, 0.0 ));
 	instanceMatrix = mult(instanceMatrix, scale(headWidth, headHeight, headWidth) );
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(instanceMatrix) );
     for(var i =0; i<6; i++) gl.drawArrays(gl.TRIANGLE_FAN, 4*i, 4);
