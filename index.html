@@ -8,12 +8,12 @@ in vec4 aPosition;
 in vec3 aColor;
 out vec4 vColor;
 
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
 
 void main()
 {
-    gl_Position = projectionMatrix * modelViewMatrix * aPosition;
+    gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
     vColor = vec4(aColor, 1.0);
 }
 </script>
