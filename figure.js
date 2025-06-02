@@ -6,9 +6,9 @@ var program;
 
 var near = 1.0;
 var far = 100.0;
-var radius = 4.0;
+var radius = 20.0;
 var camTheta = 0.0;
-var phi = 0.0;
+var phi = Math.PI/90.0;
 var dr = 5.0 * Math.PI/180.0;
 
 var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
@@ -17,7 +17,8 @@ var  aspect;       // Viewport aspect ratio
 var modelViewMatrixLoc, projectionMatrixLoc;
 var modelViewMatrix, projectionMatrix;
 var eye;
-const at = vec3(0.0, 5.0, 0.0);
+// const at = vec3(0.0, 5.0, 0.0);
+var at = vec3(0.0, 5.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 
 var instanceMatrix;
@@ -96,7 +97,7 @@ for( var i=0; i<numNodes; i++) figure[i] = createNode(null, null, null, null);
 for( var i=0; i<numNodes; i++) figure2[i] = createNode(null, null, null, null);
 
 var vBuffer;
-var modelViewLoc;
+//var modelViewLoc;
 
 var pointsArray = [];
 var colors = [];
@@ -515,17 +516,25 @@ window.onload = function init() {
 
     instanceMatrix = mat4();
 
-    eye = vec3(0.0, 5.0, 20.0);
-    projectionMatrix = perspective(fovy, aspect, near, far);
-    modelViewMatrix = lookAt(eye, at , up);
+    //eye = vec3(0.0, 5.0, 20.0);
+    // eye = vec3(radius*Math.sin(camTheta)*Math.cos(phi),
+    //     radius*Math.sin(camTheta)*Math.sin(phi), radius*Math.cos(camTheta));
+
+    // console.log(radius*Math.sin(camTheta)*Math.cos(phi) + ", " +
+    //     radius*Math.sin(camTheta)*Math.sin(phi) + ", " + radius*Math.cos(camTheta))
+
+    // projectionMatrix = perspective(fovy, aspect, near, far);
+    // modelViewMatrix = lookAt(eye, at , up);
 
     colorLoc = gl.getUniformLocation(program, "uColor");
 
-    gl.uniformMatrix4fv(gl.getUniformLocation( program, "uModelViewMatrix"), false, flatten(modelViewMatrix)  );
-    gl.uniformMatrix4fv( gl.getUniformLocation( program, "uProjectionMatrix"), false, flatten(projectionMatrix)  );
+    
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix")
     projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
+
+    // gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+    // gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 
     cube();
     //quad( 8, 9, 10, 11);
@@ -598,11 +607,39 @@ window.onload = function init() {
          initNodes(swordGripId);
     };
 
-    window.addEventListener('keydown', function(){theta += dr;});
+    window.addEventListener('keydown', keyDown);
 
     function keyDown(e){
-    console.log(e.key);
+        switch (e.key) {
+            case "w":
+                radius *= 0.9;
+        break;
+            case "s":
+                radius *= 1.1;
+        break;
+            case "d":
+                camTheta += dr;
+        break;
+            case "a":
+                camTheta -= dr;
+        break;
+            case "ArrowRight":
+                //console.log(at);
+                at[0] += 0.1;
+                //at = mult(at[0], vec3(0.1, 0.0, 0.0));
+                //console.log(at);
+        break;
+        case "ArrowLeft":
+                //console.log(at);
+                at[0] -= 0.1;
+                //at = mult(at[0], vec3(0.1, 0.0, 0.0));
+                //console.log(at);
+        break;
     }
+            console.log(e.key);
+            //camTheta += dr;
+    }
+
     // document.getElementById("Button1").onclick = function(){near  *= 1.1; far *= 1.1;};
     // document.getElementById("Button2").onclick = function(){near *= 0.9; far *= 0.9;};
     // document.getElementById("Button3").onclick = function(){radius *= 2.0;};
@@ -623,14 +660,24 @@ var render = function() {
 
         gl.clear( gl.COLOR_BUFFER_BIT );
 
-        modelViewMatrix = lookAt(eye, at , up);
+        eye = vec3(radius*Math.sin(camTheta)*Math.cos(phi),
+        radius*Math.sin(camTheta)*Math.sin(phi), radius*Math.cos(camTheta));
+
+        //console.log(at);
+
+        projectionMatrix = perspective(fovy, aspect, near, far);
+        modelViewMatrix = lookAt(eye, vec3(at) , up);
+
         gl.uniform4fv(colorLoc, [1.0, 0.0, 0.0, 1.0]);
         traverse(torsoId);
         
-        modelViewMatrix = lookAt(eye, at , up);
+        modelViewMatrix = lookAt(eye, vec3(at) , up);
         modelViewMatrix = mult(modelViewMatrix, translate(6.0, 0.0, 0.0));
         gl.uniform4fv(colorLoc, [0.0, 0.0, 1.0, 1.0]);
         traverse2(torsoId);
+
+        gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+        gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 
         //gl.drawArrays(gl.TRIANGLES, 0, 11);
         requestAnimationFrame(render);
