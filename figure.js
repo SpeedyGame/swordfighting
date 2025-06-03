@@ -6,7 +6,7 @@ var program;
 
 var near = 1.0;
 var far = 100.0;
-var radius = 20.0;
+var radius = 30.0;
 var camTheta = 0.0;
 var phi = Math.PI/90.0;
 var dr = 5.0 * Math.PI/180.0;
@@ -83,10 +83,9 @@ var headWidth = 1.0;
 
 var numNodes = 14;
 var numAngles = 12;
-var angle = 0;
 
-var theta = [0, 0, 0, 0, 0, 0, 0, 180, 0, 180, 0, 180, 0, 0];
-var theta2 = [0, 0, 0, 0, 0, 0, 0, 180, 0, 180, 0, 180, 0, 0];
+var theta = [90, 0, -170, 0, 180, -45, 0, 0, 0, 180, 0, 180, 0, 0];
+var theta2 = [-90, 0, 180, -45, -170, 0, 0, 0, 0, 180, 0, 180, 0, 0];
 
 var stack = [];
 
@@ -102,6 +101,25 @@ var vBuffer;
 var pointsArray = [];
 var colors = [];
 var colorLoc;
+
+var fight = false;
+
+var position1 = -6;
+var position2 = 6 ;
+var attacking1 = false;
+var attacking2 = false;
+var attackAngle1 = 0;
+var attackAngle2 = 0;
+
+var clashing1 = false;
+var clashing2 = false;
+var clashAngle1 = false;
+var clashAngle2 = false;
+
+var jumping1 = false;
+var jumping2 = false;
+var jumpingAngle1 = 0;
+var jumpingAngle2 = 0;
 
 //-------------------------------------------
 
@@ -204,14 +222,14 @@ function initNodes(Id) {
     case swordGuardId:
        
     m = translate(0.0, swordGripHeight, 0.0);
-    //m = mult(m, rotate(theta[swordGuardId], vec3(1, 0, 0)));
+    m = mult(m, rotate(theta[swordGuardId], vec3(1, 0, 0)));
     figure[swordGuardId] = createNode( m, swordGuard, null, swordBladeId );
     break;
 
     case swordBladeId:
        
     m = translate(0.0, swordGuardHeight, 0.0);
-    //m = mult(m, rotate(theta[swordBladeId], vec3(1, 0, 0)));
+    m = mult(m, rotate(theta[swordBladeId], vec3(1, 0, 0)));
     figure[swordBladeId] = createNode( m, swordBlade, null, null );
     break;
 
@@ -290,14 +308,21 @@ function initNodes2(Id) {
 
     m = translate(0.0, upperArmHeight, 0.0);
     m = mult(m, rotate(theta2[leftLowerArmId], vec3(1, 0, 0)));
-    figure2[leftLowerArmId] = createNode( m, leftLowerArm, null, null );
+    figure2[leftLowerArmId] = createNode( m, leftLowerArm, null, swordGripId );
     break;
+
+    // case rightLowerArmId:
+
+    // m = translate(0.0, upperArmHeight, 0.0);
+    // m = mult(m, rotate(theta2[rightLowerArmId], vec3(1, 0, 0)));
+    // figure2[rightLowerArmId] = createNode( m, rightLowerArm, null, swordGripId);
+    // break;
 
     case rightLowerArmId:
 
     m = translate(0.0, upperArmHeight, 0.0);
     m = mult(m, rotate(theta2[rightLowerArmId], vec3(1, 0, 0)));
-    figure2[rightLowerArmId] = createNode( m, rightLowerArm, null, swordGripId);
+    figure2[rightLowerArmId] = createNode( m, rightLowerArm, null, null);
     break;
 
     case swordGripId:
@@ -310,14 +335,14 @@ function initNodes2(Id) {
     case swordGuardId:
        
     m = translate(0.0, swordGripHeight, 0.0);
-    //m = mult(m, rotate(theta2[swordGuardId], vec3(1, 0, 0)));
+    m = mult(m, rotate(theta2[swordGuardId], vec3(1, 0, 0)));
     figure2[swordGuardId] = createNode( m, swordGuard, null, swordBladeId );
     break;
 
     case swordBladeId:
        
     m = translate(0.0, swordGuardHeight, 0.0);
-    //m = mult(m, rotate(theta2[swordBladeId], vec3(1, 0, 0)));
+    m = mult(m, rotate(theta2[swordBladeId], vec3(1, 0, 0)));
     figure2[swordBladeId] = createNode( m, swordBlade, null, null );
     break;
 
@@ -353,12 +378,13 @@ function traverse(Id) {
 function traverse2(Id) {
 
     if(Id == null) return;
-   stack.push(modelViewMatrix);
-   modelViewMatrix = mult(modelViewMatrix, figure2[Id].transform);
-   figure2[Id].render();
-   if(figure2[Id].child != null) traverse(figure2[Id].child);
+    stack.push(modelViewMatrix);
+    modelViewMatrix = mult(modelViewMatrix, figure2[Id].transform);
+
+    figure2[Id].render();
+    if(figure2[Id].child != null) traverse2(figure2[Id].child);
     modelViewMatrix = stack.pop();
-   if(figure2[Id].sibling != null) traverse(figure2[Id].sibling);
+    if(figure2[Id].sibling != null) traverse2(figure2[Id].sibling);
 }
 
 function torso() {
@@ -480,7 +506,6 @@ function quad(a, b, c, d) {
     pointsArray.push(vertices[d]);
 }
 
-
 function cube()
 {
     quad( 1, 0, 3, 2 );
@@ -491,6 +516,19 @@ function cube()
     quad( 5, 4, 0, 1, );
 }
 
+function reset() {
+    fight = false;
+
+    attackAngle1 = 0;
+    attackAngle2 = 0;
+    clashAngle1 = 0;
+    clashAngle2 = 0;
+    
+    theta = [90, 0, -170, 0, 180, -45, 0, 0, 0, 180, 0, 180, 0, 0];
+    theta2 = [-90, 0, 180, -45, -170, 0, 0, 0, 0, 180, 0, 180, 0, 0];
+    for(i=0; i<numNodes; i++) initNodes(i);
+    for(i=0; i<numNodes; i++) initNodes2(i);
+}
 
 window.onload = function init() {
 
@@ -503,7 +541,7 @@ window.onload = function init() {
 
     aspect =  canvas.width/canvas.height;
 
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -556,56 +594,91 @@ window.onload = function init() {
     gl.vertexAttribPointer( positionLoc, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( positionLoc );
 
-        document.getElementById("slider0").onchange = function(event) {
-        theta[torsoId ] = event.target.value;
-        initNodes(torsoId);
-    };
-        document.getElementById("slider1").onchange = function(event) {
-        theta[head1Id] = event.target.value;
-        initNodes(head1Id);
-    };
+    // document.getElementById("slider0").onchange = function(event) {
+    //     theta[torsoId ] = event.target.value;
+    //     initNodes(torsoId);
+    // };
+    // document.getElementById("slider1").onchange = function(event) {
+    //     theta[head1Id] = event.target.value;
+    //     initNodes(head1Id);
+    // };
 
-    document.getElementById("slider2").onchange = function(event) {
-         theta[leftUpperArmId] = event.target.value;
-         initNodes(leftUpperArmId);
-    };
-    document.getElementById("slider3").onchange = function(event) {
-         theta[leftLowerArmId] =  event.target.value;
-         initNodes(leftLowerArmId);
-    };
+    // document.getElementById("slider2").onchange = function(event) {
+    //      theta[leftUpperArmId] = event.target.value;
+    //      initNodes(leftUpperArmId);
+    // };
+    // document.getElementById("slider3").onchange = function(event) {
+    //      theta[leftLowerArmId] =  event.target.value;
+    //      initNodes(leftLowerArmId);
+    // };
 
-        document.getElementById("slider4").onchange = function(event) {
-        theta[rightUpperArmId] = event.target.value;
-        initNodes(rightUpperArmId);
+    //     document.getElementById("slider4").onchange = function(event) {
+    //     theta[rightUpperArmId] = event.target.value;
+    //     initNodes(rightUpperArmId);
+
+    //     console.log("θ1 upper arm", theta[rightUpperArmId]);
+    //     console.log("θ2 upper arm", theta2[rightUpperArmId]);
+
+    // };
+    // document.getElementById("slider5").onchange = function(event) {
+    //      theta[rightLowerArmId] =  event.target.value;
+    //      initNodes(rightLowerArmId);
+    // };
+    //     document.getElementById("slider6").onchange = function(event) {
+    //     theta[leftUpperLegId] = event.target.value;
+    //     initNodes(leftUpperLegId);
+    // };
+    // document.getElementById("slider7").onchange = function(event) {
+    //      theta[leftLowerLegId] = event.target.value;
+    //      initNodes(leftLowerLegId);
+    // };
+    // document.getElementById("slider8").onchange = function(event) {
+    //      theta[rightUpperLegId] =  event.target.value;
+    //      initNodes(rightUpperLegId);
+    // };
+    //     document.getElementById("slider9").onchange = function(event) {
+    //     theta[rightLowerLegId] = event.target.value;
+    //     initNodes(rightLowerLegId);
+    // };
+    // document.getElementById("slider10").onchange = function(event) {
+    //      theta[head2Id] = event.target.value;
+    //      initNodes(head2Id);
+    // };
+    // document.getElementById("slider11").onchange = function(event) {
+    //      theta[swordGripId] = event.target.value;
+    //      initNodes(swordGripId);
+    // };
+    
+    document.getElementById("Button1").onclick = function(){
+        attacking1 = true;
+        console.log("Red will swing.")
+        document.getElementById('my-text-box').innerHTML = "Red will swing.";
     };
-    document.getElementById("slider5").onchange = function(event) {
-         theta[rightLowerArmId] =  event.target.value;
-         initNodes(rightLowerArmId);
+    document.getElementById("Button2").onclick = function(){
+        attacking1 = false;
+        console.log("Red will not swing.")
+        document.getElementById('my-text-box').innerHTML = "Red will not swing.";
     };
-        document.getElementById("slider6").onchange = function(event) {
-        theta[leftUpperLegId] = event.target.value;
-        initNodes(leftUpperLegId);
+    document.getElementById("Button3").onclick = function(){
+        attacking2 = true;
+        console.log("Blue will swing.")
+        document.getElementById('my-text-box').innerHTML = "Blue will swing.";
     };
-    document.getElementById("slider7").onchange = function(event) {
-         theta[leftLowerLegId] = event.target.value;
-         initNodes(leftLowerLegId);
+    document.getElementById("Button4").onclick = function(){
+        attacking2 = false;
+        console.log("Blue will not swing.")
+        document.getElementById('my-text-box').innerHTML = "Blue will not swing.";
     };
-    document.getElementById("slider8").onchange = function(event) {
-         theta[rightUpperLegId] =  event.target.value;
-         initNodes(rightUpperLegId);
+    document.getElementById("Button5").onclick = function(){
+        console.log("Fight!")
+        document.getElementById('my-text-box').innerHTML = "Fight!";
+        fight = true;
     };
-        document.getElementById("slider9").onchange = function(event) {
-        theta[rightLowerLegId] = event.target.value;
-        initNodes(rightLowerLegId);
-    };
-    document.getElementById("slider10").onchange = function(event) {
-         theta[head2Id] = event.target.value;
-         initNodes(head2Id);
-    };
-    document.getElementById("slider11").onchange = function(event) {
-         theta[swordGripId] = event.target.value;
-         initNodes(swordGripId);
-    };
+    document.getElementById("Button6").onclick = function() {
+        reset();
+        console.log("Fight has been resetted.")
+        document.getElementById('my-text-box').innerHTML = "Fight has been resetted.";
+    }
 
     window.addEventListener('keydown', keyDown);
 
@@ -623,17 +696,24 @@ window.onload = function init() {
             case "a":
                 camTheta -= dr;
         break;
-            case "ArrowRight":
-                //console.log(at);
-                at[0] += 0.1;
-                //at = mult(at[0], vec3(0.1, 0.0, 0.0));
-                //console.log(at);
+        //     case "ArrowRight":
+        //         //console.log(at);
+        //         at[0] += 0.5;
+        //         //at = mult(at[0], vec3(0.1, 0.0, 0.0));
+        //         //console.log(at);
+        // break;
+        // case "ArrowLeft":
+        //         //console.log(at);
+        //         at[0] -= 0.5;
+        //         //at = mult(at[0], vec3(0.1, 0.0, 0.0));
+        //         //console.log(at);
+        // break;
+        case " ":
+            //reset();
+            fight = true;
         break;
-        case "ArrowLeft":
-                //console.log(at);
-                at[0] -= 0.1;
-                //at = mult(at[0], vec3(0.1, 0.0, 0.0));
-                //console.log(at);
+        case "r":
+            reset();
         break;
     }
             console.log(e.key);
@@ -660,6 +740,133 @@ var render = function() {
 
         gl.clear( gl.COLOR_BUFFER_BIT );
 
+        if (fight && (attacking1 || attacking2)) {
+            if(attacking1) {
+                attackAngle1 += 1;
+
+                let angle = 130 * Math.sin(attackAngle1 * Math.PI / 180);
+
+                theta[rightUpperArmId] = angle;
+
+                initNodes(rightUpperArmId);
+
+                if (attackAngle1 >= 90) {
+                    if (attacking2) {
+                        //attacking1 = false;
+                        clashing1 = true;
+                    }
+                    else {
+                        //attacking1 = false;
+                        clashing2 = true;
+                    }
+                    //console.log(attackAngle1);
+                }
+            }
+
+            if(attacking2) {
+                attackAngle2 += 1;
+
+                let angle = 130 * Math.sin(attackAngle2 * Math.PI / 180);
+
+                theta2[leftUpperArmId] = angle;
+                // theta[rightLowerArmId] = angle / 2;
+                // theta[swordGripId] = -angle / 3;
+
+                initNodes2(leftUpperArmId);
+
+                if (attackAngle2 >= 90) {
+                    console.log(attacking1);
+                    if (attacking1) {
+                        //attacking2 = false;
+                        clashing2 = true;
+                    }
+                    else {
+                        //attacking2 = false;
+                        clashing1 = true;
+                    }
+                    //console.log(attackAngle1);
+                }
+            }
+
+            if (clashing1) {
+                clashAngle1 +=4;
+                var leanBack = 0.0;
+                leanBack += 15;
+
+                let angle = 130 * Math.cos(clashAngle1 * Math.PI / 180);
+
+                theta[rightUpperArmId] = angle;
+                theta[head1Id] = -angle / 4;
+                theta[head2Id] = -angle / 2;
+
+                if (clashAngle1 >= 90) {
+                    //theta[head1Id] = -angle / 2;
+                    theta[torsoId] += leanBack;
+                    clashing1 = false;
+                    if (attacking1 == false && attacking2){
+                        console.log("Blue wins!")
+                        document.getElementById('my-text-box').innerHTML = "Blue wins!";
+                    }
+                    else if (attacking2) {
+                        console.log("It's a draw (blue side).")
+                        document.getElementById('my-text-box').innerHTML = "It's a draw.";
+                    }
+                    attacking1 = false;
+                    attacking2 = false;
+                }
+                
+                initNodes(rightUpperArmId);
+                initNodes(torsoId);
+                initNodes(headId);
+
+            }
+
+            if (clashing2) {
+                clashAngle2 +=4;
+                var leanBack = 0.0;
+                leanBack += 15;
+
+                let angle = 130 * Math.cos(clashAngle2 * Math.PI / 180);
+
+                theta2[leftUpperArmId] = angle;
+                theta2[head1Id] = -angle / 2;
+                theta2[head2Id] = -angle / 2;
+
+                if (clashAngle2 >= 90) {
+                    //attacking1 = false;
+                    theta2[torsoId] += leanBack;
+                    clashing2 = false;
+                    if (attacking1 && attacking2 == false){
+                        console.log("Red wins!")
+                        document.getElementById('my-text-box').innerHTML = "Red wins!";
+                    }
+                    else if (attacking1) {
+                        console.log("It's a draw (red side).")
+                        document.getElementById('my-text-box').innerHTML = "It's a draw.";
+                    }
+                    attacking2 = false;
+                    attacking1 = false;
+                }
+                
+                initNodes2(leftUpperArmId);
+                initNodes2(torsoId);
+                initNodes2(head1Id);
+            }
+
+            if (jumping1) {
+                jumpingAngle1 +=1;
+
+                let angle = 90 * Math.sin(jumpingAngle1 * Math.PI / 180);
+
+                theta2[torsoId] += translate(0.0, angle, 0.0);
+
+                initNodes(torsoId);
+            }
+        }
+        else{
+            fight = false;
+        }
+
         eye = vec3(radius*Math.sin(camTheta)*Math.cos(phi),
         radius*Math.sin(camTheta)*Math.sin(phi), radius*Math.cos(camTheta));
 
@@ -667,12 +874,13 @@ var render = function() {
 
         projectionMatrix = perspective(fovy, aspect, near, far);
         modelViewMatrix = lookAt(eye, vec3(at) , up);
+        modelViewMatrix = mult(modelViewMatrix, translate(position1, 0.0, 0.0));
 
         gl.uniform4fv(colorLoc, [1.0, 0.0, 0.0, 1.0]);
         traverse(torsoId);
         
         modelViewMatrix = lookAt(eye, vec3(at) , up);
-        modelViewMatrix = mult(modelViewMatrix, translate(6.0, 0.0, 0.0));
+        modelViewMatrix = mult(modelViewMatrix, translate(position2, 0.0, 0.0));
         gl.uniform4fv(colorLoc, [0.0, 0.0, 1.0, 1.0]);
         traverse2(torsoId);
 
